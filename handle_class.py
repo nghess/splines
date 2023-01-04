@@ -34,7 +34,10 @@ class Handle:
         self.x = x + origin[0]
         self.y = y + origin[1]
         self.pt = [self.x, self.y]
-        self.radius = 8
+        self.radius = 5
+
+    def draw(self, img):
+        cv2.circle(img, self.pt, 3, (0, 0, 255), -1, lineType=cv2.LINE_AA)
 
     def drag_and_drop(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -82,10 +85,8 @@ while True:
     # Draw Handles
     canvas = cv2.line(canvas, p0.pt, p1.pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
     canvas = cv2.line(canvas, p2.pt, p3.pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, p0.pt, 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, p1.pt, 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, p2.pt, 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, p3.pt, 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+    for handle in handles:
+        handle.draw(canvas)
 
     # Show Canvas
     cv2.imshow('Spline', canvas)
