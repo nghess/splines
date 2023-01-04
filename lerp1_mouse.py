@@ -25,22 +25,48 @@ def lerp_spline(l1, l2):
 
 # Drag and drop handles
 def mouse_click(event, x, y, flags, param):
-    #could we make a function that figures out which point is closest and pipes that in?
-    global p0, h, canvas, lp0, radius
+    global p0, p1, p2, p3, h0, h1, h2, h3, canvas, lp0, radius
     if event == cv2.EVENT_LBUTTONDOWN and \
             (x <= p0[0] + radius) and \
             (x >= p0[0] - radius) and \
             (y <= p0[1] + radius) and \
             (y >= p0[1] - radius):
         print("down")
-        h = True
+        h0 = True
+    elif event == cv2.EVENT_LBUTTONDOWN and \
+            (x <= p1[0] + radius) and \
+            (x >= p1[0] - radius) and \
+            (y <= p1[1] + radius) and \
+            (y >= p1[1] - radius):
+        print("down")
+        h1 = True
+    elif event == cv2.EVENT_LBUTTONDOWN and \
+            (x <= p2[0] + radius) and \
+            (x >= p2[0] - radius) and \
+            (y <= p2[1] + radius) and \
+            (y >= p2[1] - radius):
+        print("down")
+        h2 = True
+    elif event == cv2.EVENT_LBUTTONDOWN and \
+            (x <= p3[0] + radius) and \
+            (x >= p3[0] - radius) and \
+            (y <= p3[1] + radius) and \
+            (y >= p3[1] - radius):
+        print("down")
+        h3 = True
     elif event == cv2.EVENT_LBUTTONUP:
-        h = False
-        print(x, y)
-        print("up")
-    if h:
-        print(x, y)
+        h0 = False
+        h1 = False
+        h2 = False
+        h3 = False
+    if h0:
         p0 = np.array([x, y])
+    if h1:
+        p1 = np.array([x, y])
+    if h2:
+        p2 = np.array([x, y])
+    if h3:
+        p3 = np.array([x, y])
 
 
 # Canvas Params
@@ -49,14 +75,19 @@ width = 512
 canvas = np.zeros((height, width, 3), dtype=np.uint8)
 origin = [int(width/2), int(height/2)]
 
-# Initial Points for Handles
-h = False
-radius = 2
+# Initialize Points for Handles
 p0 = np.array([0, -150]) + origin
 p1 = np.array([-224, 200]) + origin
 p2 = np.array([192, 0]) + origin
 p3 = np.array([232, 192]) + origin
-print(p0)
+# Set mouse state defaults and click radius
+h0 = False
+h1 = False
+h2 = False
+h3 = False
+radius = 5
+
+
 while True:
     # Clear Canvas
     canvas = np.zeros((height, width, 3), dtype=np.uint8)
@@ -67,18 +98,20 @@ while True:
     lp1 = lerp(p3, p2, t)
     spline = lerp_spline(lp0, lp1)
 
+    # Draw Lerp lines
+    for i in range(len(lp0)):
+        canvas = cv2.line(canvas, lp0[i], lp1[i], (32, 32, 0), 1, lineType=cv2.LINE_AA)
     # Draw Spline
     canvas = cv2.polylines(canvas, [spline], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
 
     # Draw Handles
-    canvas = cv2.circle(canvas, lp0[0], 2, (255, 0, 0), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, lp1[0], 2, (255, 255, 0), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, lp0[-1], 2, (0, 255, 255), -1, lineType=cv2.LINE_AA)
-    canvas = cv2.circle(canvas, lp1[-1], 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
     canvas = cv2.line(canvas, p0, p1, (255, 255, 255), 1, lineType=cv2.LINE_AA)
     canvas = cv2.line(canvas, p2, p3, (255, 255, 255), 1, lineType=cv2.LINE_AA)
-
+    canvas = cv2.circle(canvas, lp0[0], 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+    canvas = cv2.circle(canvas, lp1[0], 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+    canvas = cv2.circle(canvas, lp0[-1], 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
+    canvas = cv2.circle(canvas, lp1[-1], 2, (0, 0, 255), -1, lineType=cv2.LINE_AA)
 
     cv2.imshow('Spline', canvas)
     cv2.setMouseCallback('Spline', mouse_click)
-    cv2.waitKey(1)
+    cv2.waitKey(16)
