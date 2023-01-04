@@ -60,7 +60,7 @@ p0 = Handle(0, -150)
 p1 = Handle(-224, 200)
 p2 = Handle(192, 0)
 p3 = Handle(232, 192)
-# Handles list for
+# Handles list for mouse events
 handles = [p0, p1, p2, p3]
 
 while True:
