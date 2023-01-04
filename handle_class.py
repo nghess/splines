@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 # Lerp for handles
 def lerp(start, end, dt):
     lerp_list = []
@@ -12,7 +11,6 @@ def lerp(start, end, dt):
         lerp_list.append([x, y])
         t = round(t-dt, 2)
     return np.int32(lerp_list)
-
 
 # Lerp for spline
 def lerp_spline(l1, l2):
@@ -50,7 +48,6 @@ class Handle:
                 self.pt = [x, y]
         elif event == cv2.EVENT_LBUTTONUP:
             self.dragging = False
-
 
 # Canvas Params
 height = 512
