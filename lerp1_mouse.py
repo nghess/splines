@@ -25,7 +25,7 @@ def lerp_spline(l1, l2):
 
 # Drag and drop handles
 def mouse_click(event, x, y, flags, param):
-    global p0, p1, p2, p3, h0, h1, h2, h3, canvas, lp0, radius
+    global p0, p1, p2, p3, h0, h1, h2, h3, canvas, radius
     if event == cv2.EVENT_LBUTTONDOWN and \
             (x <= p0[0] + radius) and \
             (x >= p0[0] - radius) and \
@@ -114,4 +114,8 @@ while True:
 
     cv2.imshow('Spline', canvas)
     cv2.setMouseCallback('Spline', mouse_click)
-    cv2.waitKey(16)
+
+    if cv2.waitKey(16) == ord('q'):
+        break
+
+cv2.destroyAllWindows()
