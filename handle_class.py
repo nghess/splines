@@ -75,7 +75,6 @@ p2 = Handle(192, 0)
 p3 = Handle(232, 192)
 p4 = Handle(292, 0)
 p5 = Handle(332, 192)
-p6 = Handle(0, 0)
 
 
 while True:
