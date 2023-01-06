@@ -87,7 +87,6 @@ h2 = False
 h3 = False
 radius = 5
 
-
 while True:
     # Clear Canvas
     canvas = np.zeros((height, width, 3), dtype=np.uint8)
