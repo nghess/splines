@@ -35,11 +35,12 @@ class Handle:
         self.pt = [self.x, self.y]
         self.radius = 5
         global handles
+        global c
         handles.append(self)
 
-    def draw_pt(self, img, brightness):
+    def draw_pt(self, img, brightness, idx):
         cv2.circle(img, self.pt, 3, (0, 0, brightness), -1, lineType=cv2.LINE_AA)
-        cv2.putText(img, f"{self.pt[0]}, {self.pt[1]}", np.asarray(self.pt)+10, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=.3, color=(255, 255, 255), thickness=1, lineType=cv2.LINE_AA)
+        cv2.putText(img, f"{self.pt[0]}, {self.pt[1]}, index={idx}", np.asarray(self.pt)+10, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=.3, color=(255, 255, 255), thickness=1, lineType=cv2.LINE_AA)
 
     def drag_and_drop(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -82,14 +83,32 @@ def create_handle(event, x, y, flags, param):
         # Create handle lines and splines from handles
         create_spline()
 
-def create_spline():
-    for l in range(0, len(handles), 2):
-        line = lerp(handles[l].pt, handles[l+1].pt, .05)
-        lerp_lines.append(line)
-    for s in range(0, len(lerp_lines), 2):
-        segment = lerp_spline(lerp_lines[s], lerp_lines[s+1])
-        segments.append(segment)
 
+def create_spline():
+    count = 0
+    if len(handles) % 4 == 0:
+        #print(len(handles))
+        for l in range(0, len(handles), 2):
+            if count % 2 == 0:
+                #print(f"count={count}, even")
+                #print(f"{l}, {l+1}")
+                line = lerp(handles[l].pt, handles[l+1].pt, .05)
+                lerp_lines.append(line)
+            else:
+                #print(f"count={count}, odd")
+                #print(f"{l}, {l-1}")
+                line = lerp(handles[l+1].pt, handles[l].pt, .05)
+                lerp_lines.append(line)
+            count += 1
+
+        for s in range(0, len(lerp_lines), 2):
+            if count % 2 == 0:
+                segment = lerp_spline(lerp_lines[s], lerp_lines[s+1])
+                segments.append(segment)
+            else:
+                segment = lerp_spline(lerp_lines[s+1], lerp_lines[s])
+                segments.append(segment)
+            count += 1
 
 # Canvas Params
 height = 800
@@ -106,36 +125,35 @@ p2 = Handle(192, 0)
 p3 = Handle(232, 192)
 
 while True:
-#for i in range(1):
+    # Handle Counter
+    c = 0
+    # Wipe canvas each frame
+    canvas = np.zeros((height, width, 3), dtype=np.uint8)
+
     # List to store lerp lines as they are created
     lerp_lines = []
     # List to store spline segments as they are created
     segments = []
-
     # Create handle lines and splines from handles
     create_spline()
-    # Wipe canvas each frame
-    canvas = np.zeros((height, width, 3), dtype=np.uint8)
-    c = 0
-
-    # Draw Spline
-    for s in segments:
-        canvas = cv2.polylines(canvas, [s], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
-
 
     # Draw lerp lines
-    for l in range(len(lerp_lines) // 2):
+    for l in range(len(lerp_lines)-1):
         for pt in range(len(lerp_lines[0])):
             canvas = cv2.line(canvas, lerp_lines[l][pt], lerp_lines[l+1][pt], (32, 32, 0), 1, lineType=cv2.LINE_AA)
 
-    # Draw Handle lines
+    # Draw handle lines
     for h in range(1, len(handles), 2):
         canvas = cv2.line(canvas, handles[h].pt, handles[h-1].pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
+
+    # Draw spline segments
+    for s in segments:
+        canvas = cv2.polylines(canvas, [s], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
 
     # Draw Handle points
     for handle in handles:
         fade = int((c/len(handles))*205)
-        handle.draw_pt(canvas, brightness=fade+50)
+        handle.draw_pt(canvas, brightness=fade+50, idx=c)
         c += 1
 
     # Show Canvas
