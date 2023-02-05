@@ -54,22 +54,40 @@ class Handle:
             self.dragging = False
 
 
+
 def create_handle(event, x, y, flags, param):
     global handles
+    global lerp_lines
+    global segments
     if event == cv2.EVENT_RBUTTONDOWN:
         # Find distance between last two handles
-        difference = np.abs(np.asarray(handles[-1].pt) - np.asarray(handles[-2].pt))
-        # Add distance to next handle
+        difference = np.asarray(handles[-1].pt) - np.asarray(handles[-2].pt)
+        # Add distance for mirrored handle
         handle_n1 = difference + np.asarray(handles[-1].pt)
-        # Create handle
+        # Create mirrored handle
         Handle(handle_n1[0]-origin[0], handle_n1[1]-origin[1])
+        # Duplicate knot handle
+        handles.insert(-2, handles[-2])
+        # Add base handle for new segment
+        Handle(x-origin[0], y-origin[1])
+        # Add tail handle for new segment
+        new_tail = difference + np.asarray(handles[-1].pt)
+        Handle(new_tail[0]-origin[0], new_tail[1]-origin[1])
+
+        # List to store lerp lines as they are created
+        lerp_lines = []
+        # List to store spline segments as they are created
+        segments = []
+
+        # Create handle lines and splines from handles
+        create_spline()
 
 def create_spline():
     for l in range(0, len(handles), 2):
         line = lerp(handles[l].pt, handles[l+1].pt, .05)
-        lines.append(line)
-    for s in range(0, len(lines), 2):
-        segment = lerp_spline(lines[s], lines[s+1])
+        lerp_lines.append(line)
+    for s in range(0, len(lerp_lines), 2):
+        segment = lerp_spline(lerp_lines[s], lerp_lines[s+1])
         segments.append(segment)
 
 
@@ -87,40 +105,34 @@ p1 = Handle(-224, 200)
 p2 = Handle(192, 0)
 p3 = Handle(232, 192)
 
-# List to store handle lines as they are created
-lines = []
-# List to store spline segments as they are created
-segments = []
-
-# Create handle lines and splines from handles
-create_spline()
-
-
 while True:
+#for i in range(1):
+    # List to store lerp lines as they are created
+    lerp_lines = []
+    # List to store spline segments as they are created
+    segments = []
+
+    # Create handle lines and splines from handles
+    create_spline()
     # Wipe canvas each frame
     canvas = np.zeros((height, width, 3), dtype=np.uint8)
     c = 0
 
-    # Spline Functions
-    t = .05
-    #lp0 = lerp(p0.pt, p1.pt, t)
-    #lp1 = lerp(p3.pt, p2.pt, t)
-    #lp2 = lerp(p4.pt, p5.pt, t)
-    #spline1 = lerp_spline(lp0, lp1)
-    #spline2 = lerp_spline(lp2, lp1)
-
-    # Draw Lerp lines
-    #for i in range(len(lp0)):
-    #    canvas = cv2.line(canvas, lp0[i], lp1[i], (32, 32, 0), 1, lineType=cv2.LINE_AA)
-        #canvas = cv2.line(canvas, lp1[i], lp2[i], (32, 32, 0), 1, lineType=cv2.LINE_AA)
     # Draw Spline
-    #canvas = cv2.polylines(canvas, [spline1], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
-    #canvas = cv2.polylines(canvas, [spline2], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
+    for s in segments:
+        canvas = cv2.polylines(canvas, [s], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
 
-    # Draw Handles
-    #canvas = cv2.line(canvas, p0.pt, p1.pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
-    #canvas = cv2.line(canvas, p2.pt, p3.pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
-    #canvas = cv2.line(canvas, p4.pt, p5.pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
+
+    # Draw lerp lines
+    for l in range(len(lerp_lines) // 2):
+        for pt in range(len(lerp_lines[0])):
+            canvas = cv2.line(canvas, lerp_lines[l][pt], lerp_lines[l+1][pt], (32, 32, 0), 1, lineType=cv2.LINE_AA)
+
+    # Draw Handle lines
+    for h in range(1, len(handles), 2):
+        canvas = cv2.line(canvas, handles[h].pt, handles[h-1].pt, (255, 255, 255), 1, lineType=cv2.LINE_AA)
+
+    # Draw Handle points
     for handle in handles:
         fade = int((c/len(handles))*205)
         handle.draw_pt(canvas, brightness=fade+50)
@@ -129,7 +141,7 @@ while True:
     # Show Canvas
     cv2.imshow('Spline', canvas)
     cv2.setMouseCallback('Spline', on_mouse_event)
-    if cv2.waitKey(16) == ord('q'):
+    if cv2.waitKey(1) == ord('q'):
         break
 
 cv2.destroyAllWindows()
