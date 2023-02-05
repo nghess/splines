@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 # Lerp for handles
 def lerp(start, end, dt):
     lerp_list = []
@@ -11,6 +12,7 @@ def lerp(start, end, dt):
         lerp_list.append([x, y])
         t = round(t-dt, 2)
     return np.int32(lerp_list)
+
 
 # Lerp for spline
 def lerp_spline(l1, l2):
@@ -27,8 +29,8 @@ def lerp_spline(l1, l2):
 lerp_lines = []
 segments = []
 
+
 def create_spline():
-    count = 0
     # Lerp handles build guide rails
     for l in range(1, len(handles)):
         # Toggle direction of each lerp
@@ -42,8 +44,7 @@ def create_spline():
             lerp_lines.append(line)
             line = lerp(handles[l-1].knot, handles[l-1].arm2, .05)
             lerp_lines.append(line)
-
-    # Lerp along guide rails
+    # Lerp spline along guide rails
     for s in range(0, len(lerp_lines)-1, 2):
         segment = lerp_spline(lerp_lines[s], lerp_lines[s+1])
         segments.append(segment)
@@ -57,12 +58,11 @@ def on_mouse_event(event, x, y, flags, param):
 
 def add_handle(event, x, y, flags, param):
     if event == cv2.EVENT_RBUTTONDOWN:
-        #print(len(handles))
-        #print(x, y)
         Handle(x-origin[0], y-origin[1])
 
+
 class Handle:
-    def __init__(self, x, y, parent=None):
+    def __init__(self, x, y):
         # Mouse location and mouse event related params
         self.x = x + origin[0]
         self.y = y + origin[1]
@@ -70,12 +70,10 @@ class Handle:
         self.arm1_drag = False
         self.arm2_drag = False
         self.radius = 5
-
         # Handle points
         self.knot = np.array([self.x, self.y])
         self.arm1 = np.array([self.x, self.y + 100])
         self.arm2 = np.array([self.x, self.y - 100])
-
         # Add new handle to list
         global handles
         handles.append(self)
@@ -134,8 +132,8 @@ origin = np.array([int(width/2), int(height/2)])
 
 # List to store handles as they are created
 handles = []
-
-p0 = Handle(0, -150)
+# Frame count
+i = 0
 
 while True:
     # Wipe canvas each frame
@@ -166,6 +164,7 @@ while True:
     # Show Canvas
     cv2.imshow('Spline', canvas)
     cv2.setMouseCallback('Spline', on_mouse_event)
-    cv2.imwrite("output/lerp/" + str(i) + ".png", frame)
-    if cv2.waitKey(1) == ord('q'):
+    #cv2.imwrite("output/" + str(i) + "lerp.png", canvas)
+    i += 1
+    if cv2.waitKey(16) == ord('q'):
         break
