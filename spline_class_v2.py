@@ -22,18 +22,48 @@ def lerp_spline(l1, l2):
         lerp_list.append([x, y])
     return np.int32(lerp_list)
 
-def on_mouse_event(event, x, y, flags, param):
-    #Handle.add_handle(event, x, y, flags, param)
 
+# Lists for lerps and splines
+lerp_lines = []
+segments = []
+
+def create_spline():
+    count = 0
+    # Lerp handles build guide rails
+    for l in range(1, len(handles)):
+        # Toggle direction of each lerp
+        if l % 2 == 0:
+            line = lerp(handles[l].arm1, handles[l].knot, .05)
+            lerp_lines.append(line)
+            line = lerp(handles[l-1].knot, handles[l-1].arm1, .05)
+            lerp_lines.append(line)
+        else:
+            line = lerp(handles[l].arm2, handles[l].knot, .05)
+            lerp_lines.append(line)
+            line = lerp(handles[l-1].knot, handles[l-1].arm2, .05)
+            lerp_lines.append(line)
+
+    # Lerp along guide rails
+    for s in range(0, len(lerp_lines)-1, 2):
+        segment = lerp_spline(lerp_lines[s], lerp_lines[s+1])
+        segments.append(segment)
+
+
+def on_mouse_event(event, x, y, flags, param):
+    add_handle(event, x, y, flags, param)
     for handle in handles:
         handle.drag_and_drop(event, x, y, flags, param)
-        handle.add_handle(event, x, y, flags, param)
 
-class Spline:
+
+def add_handle(event, x, y, flags, param):
+    if event == cv2.EVENT_RBUTTONDOWN:
+        #print(len(handles))
+        #print(x, y)
+        Handle(x-origin[0], y-origin[1])
+
+class Handle:
     def __init__(self, x, y, parent=None):
         # Mouse location and mouse event related params
-        print(x)
-        print(origin[0])
         self.x = x + origin[0]
         self.y = y + origin[1]
         self.knot_drag = False
@@ -43,25 +73,12 @@ class Spline:
 
         # Handle points
         self.knot = np.array([self.x, self.y])
-        self.arm1 = np.array([self.x, self.y + 50])
-        self.arm2 = np.array([self.x, self.y - 50])
-
-        # Hierarchy params
-        self.parent = parent
-        self.children = []
-        self.child_index = None
+        self.arm1 = np.array([self.x, self.y + 100])
+        self.arm2 = np.array([self.x, self.y - 100])
 
         # Add new handle to list
         global handles
         handles.append(self)
-
-    def add_handle(self, event, x, y, flags, param):
-        if event == cv2.EVENT_RBUTTONDOWN:
-            print('right click')
-            new_child = Spline(self, x, y)
-            self.children.append(new_child)
-            new_child.child_index = self.children.index(new_child)
-            return new_child
 
     def draw_handle(self, img, brightness, idx):
         cv2.line(img, self.arm1, self.arm2, (255, 255, 255), 1, lineType=cv2.LINE_AA)
@@ -71,7 +88,7 @@ class Spline:
         #cv2.putText(img, f"{self.knot} idx={idx}", self.knot+10, fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=.3, color=(255, 255, 255), thickness=1, lineType=cv2.LINE_AA)
 
     def drag_and_drop(self, event, x, y, flags, param):
-        global datum
+        global datum  # Drag starting point
         if event == cv2.EVENT_LBUTTONDOWN:
             if (x - self.knot[0])**2 + (y - self.knot[1])**2 <= self.radius**2:
                 datum = np.array([x, y])  # Get initial mouse position
@@ -82,7 +99,7 @@ class Spline:
             elif (x - self.arm2[0])**2 + (y - self.arm2[1])**2 <= self.radius**2:
                 datum = np.array([x, y])  # Get initial mouse position
                 self.arm2_drag = True
-
+        # Possible drag and drops
         elif event == cv2.EVENT_MOUSEMOVE:
             # Drag knot
             if self.knot_drag:
@@ -102,7 +119,7 @@ class Spline:
                 self.arm2 = np.array([x, y])
                 arm_offset = self.knot - self.arm2  # Distance between handle and knot
                 self.arm1 = self.knot + arm_offset  # Opposite arm gets offset
-
+        # Mouse up
         elif event == cv2.EVENT_LBUTTONUP:
             self.knot_drag = False
             self.arm1_drag = False
@@ -118,13 +135,27 @@ origin = np.array([int(width/2), int(height/2)])
 # List to store handles as they are created
 handles = []
 
-p0 = Spline(0, -150)
+p0 = Handle(0, -150)
 
 while True:
     # Wipe canvas each frame
     canvas = np.zeros((height, width, 3), dtype=np.uint8)
     # Handle Count
-    c = 1
+    c = 0
+
+    # Create spline
+    lerp_lines = []
+    segments = []
+    create_spline()
+
+    # Draw lerp lines
+    for l in range(0, len(lerp_lines)-1, 2):
+        for pt in range(len(lerp_lines[0])):
+            canvas = cv2.line(canvas, lerp_lines[l][pt], lerp_lines[l+1][pt], (32, 32, 0), 1, lineType=cv2.LINE_AA)
+
+    # Draw spline segments
+    for s in segments:
+        canvas = cv2.polylines(canvas, [s], False, (255, 255, 0), 1, lineType=cv2.LINE_AA)
 
     # Draw Handle points
     for handle in handles:
@@ -135,5 +166,6 @@ while True:
     # Show Canvas
     cv2.imshow('Spline', canvas)
     cv2.setMouseCallback('Spline', on_mouse_event)
+    cv2.imwrite("output/lerp/" + str(i) + ".png", frame)
     if cv2.waitKey(1) == ord('q'):
         break
