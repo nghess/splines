@@ -87,15 +87,14 @@ class Handle:
 
     def drag_and_drop(self, event, x, y, flags, param):
         global datum  # Drag starting point
+        # On left click, check if mouse is within click radius of a handle or knot
         if event == cv2.EVENT_LBUTTONDOWN:
+            datum = np.array([x, y])  # Get initial mouse position
             if (x - self.knot[0])**2 + (y - self.knot[1])**2 <= self.radius**2:
-                datum = np.array([x, y])  # Get initial mouse position
                 self.knot_drag = True
             elif (x - self.arm1[0])**2 + (y - self.arm1[1])**2 <= self.radius**2:
-                datum = np.array([x, y])  # Get initial mouse position
                 self.arm1_drag = True
             elif (x - self.arm2[0])**2 + (y - self.arm2[1])**2 <= self.radius**2:
-                datum = np.array([x, y])  # Get initial mouse position
                 self.arm2_drag = True
         # Possible drag and drops
         elif event == cv2.EVENT_MOUSEMOVE:
