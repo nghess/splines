@@ -1,14 +1,18 @@
 import numpy as np
 import cv2
 
-# Window size for each wave
-size = 75
+# Wave related vars
+freqs = 10  # Number of sin and cos frequencies
+freq = 1  # Starting frequency
+change = 1  # How much freq changes each iteration
+loop = 200  # Total points calculated for each wave
+sin_waves, cos_waves, cmb_waves = ([], [], [])  # Empty lists
+size = 75  # Window size for each wave
+
 # Canvas
-height = 10 * size
-width = 10 * size
+height = (freqs + 1) * size
+width = (freqs + 1) * size
 canvas = np.zeros((height, width, 3), dtype=np.uint8)
-# Points for each wave
-loop = 200
 
 
 class MakeSin:
@@ -55,15 +59,10 @@ class Window:
         cv2.polylines(canvas, [self.pts], False, (128, 128, 0), 1, lineType=cv2.LINE_AA)
 
 
-# Create waves
-freqs = 9
-change = 0
-sin_waves, cos_waves, cmb_waves = ([], [], [])
-
 for i in range(freqs):
-    sin = MakeSin(sin_waves, freq=change+1)
-    cos = MakeCos(cos_waves, freq=change+1)
-    change += 1
+    sin = MakeSin(sin_waves, freq=freq)
+    cos = MakeCos(cos_waves, freq=freq)
+    freq += change
 
 # Create Combos
 for i in range(freqs**2):
