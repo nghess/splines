@@ -15,23 +15,13 @@ width = (freqs + 1) * size
 canvas = np.zeros((height, width, 3), dtype=np.uint8)
 
 
-class MakeSin:
-    def __init__(self, objlist, freq=1, steps=loop):
+class MakeWave:
+    def __init__(self, objlist, function=np.sin, freq=1, steps=loop):
         self.freq = freq
         self.steps = steps
         # Make sin wave
         self.x = np.linspace(0, 2*np.pi*freq, steps)
-        self.y = np.sin(self.x)
-        objlist.append(self)
-
-
-class MakeCos:
-    def __init__(self, objlist, freq=1, steps=loop):
-        self.freq = freq
-        self.steps = steps
-        # Make cosine wave
-        self.x = np.linspace(0, 2*np.pi*freq, steps)
-        self.y = np.cos(self.x)
+        self.y = function(self.x)
         objlist.append(self)
 
 
@@ -60,8 +50,8 @@ class Window:
 
 
 for i in range(freqs):
-    sin = MakeSin(sin_waves, freq=freq)
-    cos = MakeCos(cos_waves, freq=freq)
+    sin = MakeWave(sin_waves, function=np.sin, freq=freq)
+    cos = MakeWave(cos_waves, function=np.cos, freq=freq)
     freq += change
 
 # Create Combos
