@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 # Window size for each wave
-size = 50
+size = 75
 # Canvas
 height = 10 * size
 width = 10 * size
@@ -102,9 +102,10 @@ frame = 0
 cv2.imwrite("waves.png", canvas)
 
 while True:
-
+    # Wipe Background
     background = cv2.imread("waves.png")
 
+    # Draw points
     for cos in cos_windows:
         background = cv2.circle(background, cos.pts[frame], 1, (255, 255, 255), -1, lineType=cv2.LINE_AA)
     for sin in sin_windows:
@@ -112,11 +113,14 @@ while True:
     for cmb in cmb_windows:
         background = cv2.circle(background, cmb.pts[frame], 1, (255, 255, 255), -1, lineType=cv2.LINE_AA)
 
-    frame += 1
-    if frame == loop:
-        frame = 0
-
     # Show Canvas
     cv2.imshow('Spline', background)
+    cv2.imwrite("output/" + str(frame) + "waves.png", background)
     if cv2.waitKey(16) == ord('q'):
+        break
+
+    # Looper
+    frame += 1
+    if frame == loop:
+        #frame = 0
         break
