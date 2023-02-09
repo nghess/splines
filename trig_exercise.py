@@ -6,7 +6,7 @@ freqs = 10  # Number of sin and cos frequencies
 freq = 1  # Starting frequency
 change = 1  # How much freq changes each iteration
 loop = 200  # Total points calculated for each wave
-sin_waves, cos_waves, cmb_waves = ([], [], [])  # Empty lists
+sin_waves, cos_waves, cmb_waves = [], [], []  # Empty lists
 size = 75  # Window size for each wave
 
 # Canvas
@@ -68,7 +68,7 @@ for i in range(freqs):
     cos_plt = Window(cos_windows, cos_waves[i], [size*(i+1), 0])
 
 # Combo windows
-count, x_loc, y_loc = (0, 0, 0)
+count, x_loc, y_loc = 0, 0, 0
 for y in range(freqs):
     y_loc = size * (y+1)
     for x in range(freqs):
