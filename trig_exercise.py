@@ -49,7 +49,7 @@ class Window:
         cv2.polylines(canvas, [self.pts], False, (128, 128, 0), 1, lineType=cv2.LINE_AA)
 
 
-# Create sin and cosine waves
+# Create sine and cosine waves
 for i in range(freqs):
     sin = MakeWave(sin_waves, function=np.sin, freq=freq)
     cos = MakeWave(cos_waves, function=np.cos, freq=freq)
